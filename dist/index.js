@@ -27345,12 +27345,15 @@ Report generated at \`${summary.generated_at}\`
 ${vulnDetails}${moreLine}`;
 }
 function formatVulnerability(vuln) {
-    return `#### ${vuln.id} (${severityEmojis[vuln.severity] || ''} ${vuln.severity})
-- **Package**: ${vuln.package} ${vuln.version}
-- **Description**: ${vuln.description}
-- **CVSS Score**: ${vuln.preferred_cvss.score_v3 ?? 'N/A'}
-- **CWE IDs**: ${vuln.cwe_ids.join(', ')}
-- **Links**: ${vuln.links.join(', ')}`;
+    return `<details>
+  <summary><strong>${vuln.id}</strong> (${severityEmojis[vuln.severity] || ''} ${vuln.severity})</summary>
+  
+  - **Package**: ${vuln.package} ${vuln.version}
+  - **Description**: ${vuln.description}
+  - **CVSS Score**: ${vuln.preferred_cvss.score_v3 ?? 'N/A'}
+  - **CWE IDs**: ${vuln.cwe_ids.join(', ')}
+  - **Links**: ${vuln.links.join(', ')}
+</details>`;
 }
 
 /**
