@@ -5,13 +5,13 @@
   "author": "",
   "type": "module",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/ditkrg/harbor-scan-results-action",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/ditkrg/harbor-scan-results-action.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/ditkrg/harbor-scan-results-action/issues"
   },
   "keywords": [
     "actions"

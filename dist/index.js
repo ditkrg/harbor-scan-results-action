@@ -27246,6 +27246,112 @@ function requireCore () {
 
 var coreExports = requireCore();
 
+async function getScanResults(harborUrl, username, password, projectName, repositoryName, digest) {
+    const response = await fetch(`${harborUrl}/api/v2.0/projects/${projectName}/repositories/${repositoryName}/artifacts/${digest}/additions/vulnerabilities`, {
+        headers: {
+            Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`
+        }
+    });
+    if (!response.ok) {
+        throw new Error(`Failed to get scan results: ${response.statusText}`);
+    }
+    return response.json();
+}
+function checkScanStatus(result) {
+    if (!result['application/vnd.security.vulnerability.report; version=1.1']) {
+        return false;
+    }
+    return true;
+}
+function generateScanSummary(result, harborUrl, projectName, repositoryName, digest) {
+    const report = result['application/vnd.security.vulnerability.report; version=1.1'];
+    if (!report) {
+        throw new Error('No vulnerability report found');
+    }
+    const vulnerabilities = report.vulnerabilities;
+    const total = vulnerabilities.length;
+    const fixable = vulnerabilities.filter((v) => v.fix_version !== null && v.fix_version !== '').length;
+    const critical = vulnerabilities.filter((v) => v.severity === 'Critical').length;
+    const high = vulnerabilities.filter((v) => v.severity === 'High').length;
+    const medium = vulnerabilities.filter((v) => v.severity === 'Medium').length;
+    const low = vulnerabilities.filter((v) => v.severity === 'Low').length;
+    const imageUrl = `${harborUrl}/harbor/projects/${projectName}/repositories/${repositoryName}/artifacts/${digest}`;
+    const repoLink = `${harborUrl}/harbor/projects/${projectName}/repositories/${repositoryName}`;
+    // Sort vulnerabilities by severity
+    const sortedVulns = [...vulnerabilities].sort((a, b) => {
+        const severityOrder = {
+            Critical: 0,
+            High: 1,
+            Medium: 2,
+            Low: 3,
+            None: 4
+        };
+        return severityOrder[a.severity] - severityOrder[b.severity];
+    });
+    return {
+        total,
+        fixable,
+        critical,
+        high,
+        medium,
+        low,
+        scanner: `${report.scanner.name} ${report.scanner.version}`,
+        vendor: report.scanner.vendor,
+        generated_at: report.generated_at,
+        image_url: imageUrl,
+        repo_link: repoLink,
+        vulnerabilities: sortedVulns
+    };
+}
+function generateMarkdownReport(summary) {
+    const severityEmojis = {
+        Critical: '🔥',
+        High: '🚨',
+        Medium: '⚠️',
+        Low: '🟡'
+    };
+    const severityCounts = [
+        summary.critical > 0
+            ? `${severityEmojis['Critical']} ${summary.critical} critical`
+            : null,
+        summary.high > 0 ? `${severityEmojis['High']} ${summary.high} high` : null,
+        summary.medium > 0
+            ? `${severityEmojis['Medium']} ${summary.medium} medium`
+            : null,
+        summary.low > 0 ? `${severityEmojis['Low']} ${summary.low} low` : null
+    ]
+        .filter(Boolean)
+        .join(' ');
+    const vulnDetails = summary.vulnerabilities
+        .slice(0, 10)
+        .map((v) => formatVulnerability(v))
+        .join('\n\n');
+    const moreLine = summary.vulnerabilities.length > 10
+        ? `\n...and ${summary.vulnerabilities.length - 10} more. [See all in Harbor](${summary.repo_link})`
+        : '';
+    return `**Harbor Image Vulnerability Report**
+
+Results for image [${summary.image_url}](${summary.image_url})
+
+${severityCounts}
+
+**Total ${summary.total} vulnerabilities found - ${summary.fixable} fixable**
+
+Scanned with \`${summary.scanner}\` from \`${summary.vendor}\`  
+Report generated at \`${summary.generated_at}\`
+
+### Vulnerabilities Found:
+${vulnDetails}${moreLine}`;
+}
+function formatVulnerability(vuln) {
+    return `#### ${vuln.id} (${vuln.severity})
+- **Package**: ${vuln.package} ${vuln.version}
+- **Description**: ${vuln.description}
+- **CVSS Score**: ${vuln.preferred_cvss.score_v3 ?? 'N/A'}
+- **CWE IDs**: ${vuln.cwe_ids.join(', ')}
+- **Links**: ${vuln.links.join(', ')}`;
+}
+
 /**
  * Waits for a number of milliseconds.
  *
@@ -27267,20 +27373,56 @@ async function wait(milliseconds) {
  */
 async function run() {
     try {
-        const ms = coreExports.getInput('milliseconds');
-        // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-        coreExports.debug(`Waiting ${ms} milliseconds ...`);
-        // Log the current timestamp, wait, then log the new timestamp
-        coreExports.debug(new Date().toTimeString());
-        await wait(parseInt(ms, 10));
-        coreExports.debug(new Date().toTimeString());
-        // Set outputs for other workflow steps to use
-        coreExports.setOutput('time', new Date().toTimeString());
+        // Get inputs
+        const harborUrl = coreExports.getInput('harbor-url', { required: true });
+        const harborUsername = coreExports.getInput('harbor-username', { required: true });
+        const harborPassword = coreExports.getInput('harbor-password', { required: true });
+        const projectName = coreExports.getInput('project-name', { required: true });
+        const repositoryName = coreExports.getInput('repository-name', { required: true });
+        const digest = coreExports.getInput('digest', { required: true });
+        const maxAttempts = parseInt(coreExports.getInput('max-attempts') || '30', 10);
+        const sleepInterval = parseInt(coreExports.getInput('sleep-interval') || '5', 10) * 1000; // Convert to milliseconds
+        coreExports.info('Waiting for Harbor scan to complete...');
+        // Poll for scan results
+        let attempt = 1;
+        let scanResult;
+        while (attempt <= maxAttempts) {
+            coreExports.info(`Attempt ${attempt} of ${maxAttempts}`);
+            try {
+                scanResult = await getScanResults(harborUrl, harborUsername, harborPassword, projectName, repositoryName, digest);
+                if (checkScanStatus(scanResult)) {
+                    break;
+                }
+            }
+            catch (error) {
+                coreExports.debug(`Attempt ${attempt} failed: ${error instanceof Error ? error.message : String(error)}`);
+            }
+            if (attempt < maxAttempts) {
+                await wait(sleepInterval);
+            }
+            attempt++;
+        }
+        if (!scanResult || !checkScanStatus(scanResult)) {
+            throw new Error('Timeout waiting for scan results');
+        }
+        // Generate summary and report
+        const summary = generateScanSummary(scanResult, harborUrl, projectName, repositoryName, digest);
+        const markdownReport = generateMarkdownReport(summary);
+        // Set outputs
+        coreExports.setOutput('scan-results', JSON.stringify(summary));
+        coreExports.setOutput('report-markdown', markdownReport);
+        // Print summary to console
+        coreExports.info(`Found ${summary.total} vulnerabilities (${summary.fixable} fixable)`);
+        coreExports.info(`Critical: ${summary.critical}, High: ${summary.high}, Medium: ${summary.medium}, Low: ${summary.low}`);
     }
     catch (error) {
         // Fail the workflow run if an error occurs
-        if (error instanceof Error)
+        if (error instanceof Error) {
             coreExports.setFailed(error.message);
+        }
+        else {
+            coreExports.setFailed('An unknown error occurred');
+        }
     }
 }
 

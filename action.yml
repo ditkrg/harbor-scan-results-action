@@ -1,6 +1,6 @@
-name: The name of your action here
-description: Provide a description here
-author: Your name or organization here
+name: 'Harbor Scan Results'
+description: 'Get vulnerability scan results from Harbor registry'
+author: 'Department of Information Technology'
 
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
@@ -9,16 +9,40 @@ branding:
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  harbor-url:
+    description: 'Harbor registry URL'
     required: true
-    default: '1000'
+  harbor-username:
+    description: 'Harbor username'
+    required: true
+  harbor-password:
+    description: 'Harbor password'
+    required: true
+  project-name:
+    description: 'Harbor project name'
+    required: true
+  repository-name:
+    description: 'Harbor repository name'
+    required: true
+  digest:
+    description: 'Image digest to scan'
+    required: true
+  max-attempts:
+    description: 'Maximum number of attempts to check scan status'
+    required: false
+    default: '30'
+  sleep-interval:
+    description: 'Sleep interval between attempts in seconds'
+    required: false
+    default: '5'
 
 # Define your outputs here.
 outputs:
-  time:
-    description: Your output description here
+  scan-results:
+    description: 'JSON string containing the scan results'
+  report-markdown:
+    description: 'Markdown formatted vulnerability report'
 
 runs:
-  using: node20
-  main: dist/index.js
+  using: 'node20'
+  main: 'dist/index.js'
