@@ -1,4 +1,4 @@
-import { ScanResult, ScanSummary, Vulnerability } from './types.js'
+import { ScanResult, ScanSummary, Vulnerability, severityEmojis } from './types.js'
 
 export async function getScanResults(
   harborUrl: string,
@@ -96,13 +96,6 @@ export function generateScanSummary(
 }
 
 export function generateMarkdownReport(summary: ScanSummary): string {
-  const severityEmojis: Record<string, string> = {
-    Critical: '🔥',
-    High: '🚨',
-    Medium: '⚠️',
-    Low: '🟡'
-  }
-
   const severityCounts = [
     summary.critical > 0
       ? `${severityEmojis['Critical']} ${summary.critical} critical`
@@ -142,7 +135,7 @@ ${vulnDetails}${moreLine}`
 }
 
 function formatVulnerability(vuln: Vulnerability): string {
-  return `#### ${vuln.id} (${vuln.severity})
+  return `#### ${vuln.id} (${severityEmojis[vuln.severity] || ''} ${vuln.severity})
 - **Package**: ${vuln.package} ${vuln.version}
 - **Description**: ${vuln.description}
 - **CVSS Score**: ${vuln.preferred_cvss.score_v3 ?? 'N/A'}

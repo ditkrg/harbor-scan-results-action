@@ -1,3 +1,10 @@
+export const severityEmojis: Record<string, string> = {
+  Critical: '🔥',
+  High: '🚨',
+  Medium: '⚠️',
+  Low: '🟡'
+}
+
 export interface Vulnerability {
   id: string
   package: string
