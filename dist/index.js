@@ -27246,6 +27246,13 @@ function requireCore () {
 
 var coreExports = requireCore();
 
+const severityEmojis = {
+    Critical: '🔥',
+    High: '🚨',
+    Medium: '⚠️',
+    Low: '🟡'
+};
+
 async function getScanResults(harborUrl, username, password, projectName, repositoryName, digest) {
     const response = await fetch(`${harborUrl}/api/v2.0/projects/${projectName}/repositories/${repositoryName}/artifacts/${digest}/additions/vulnerabilities`, {
         headers: {
@@ -27304,12 +27311,6 @@ function generateScanSummary(result, harborUrl, projectName, repositoryName, dig
     };
 }
 function generateMarkdownReport(summary) {
-    const severityEmojis = {
-        Critical: '🔥',
-        High: '🚨',
-        Medium: '⚠️',
-        Low: '🟡'
-    };
     const severityCounts = [
         summary.critical > 0
             ? `${severityEmojis['Critical']} ${summary.critical} critical`
@@ -27344,7 +27345,7 @@ Report generated at \`${summary.generated_at}\`
 ${vulnDetails}${moreLine}`;
 }
 function formatVulnerability(vuln) {
-    return `#### ${vuln.id} (${vuln.severity})
+    return `#### ${vuln.id} (${severityEmojis[vuln.severity] || ''} ${vuln.severity})
 - **Package**: ${vuln.package} ${vuln.version}
 - **Description**: ${vuln.description}
 - **CVSS Score**: ${vuln.preferred_cvss.score_v3 ?? 'N/A'}

@@ -1,4 +1,9 @@
-import { ScanResult, ScanSummary, Vulnerability, severityEmojis } from './types.js'
+import {
+  ScanResult,
+  ScanSummary,
+  Vulnerability,
+  severityEmojis
+} from './types.js'
 
 export async function getScanResults(
   harborUrl: string,
