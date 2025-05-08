@@ -67,7 +67,7 @@ export function generateScanSummary(
     (v: Vulnerability) => v.severity === 'Low'
   ).length
 
-  const imageUrl = `${harborUrl}/harbor/projects/${projectName}/repositories/${repositoryName}/artifacts/${digest}`
+  const imageUrl = `${harborUrl}/harbor/projects/${projectName}/repositories/${repositoryName}/artifacts-tab/artifacts/${digest}`
   const repoLink = `${harborUrl}/harbor/projects/${projectName}/repositories/${repositoryName}`
 
   // Sort vulnerabilities by severity

@@ -27282,7 +27282,7 @@ function generateScanSummary(result, harborUrl, projectName, repositoryName, dig
     const high = vulnerabilities.filter((v) => v.severity === 'High').length;
     const medium = vulnerabilities.filter((v) => v.severity === 'Medium').length;
     const low = vulnerabilities.filter((v) => v.severity === 'Low').length;
-    const imageUrl = `${harborUrl}/harbor/projects/${projectName}/repositories/${repositoryName}/artifacts/${digest}`;
+    const imageUrl = `${harborUrl}/harbor/projects/${projectName}/repositories/${repositoryName}/artifacts-tab/artifacts/${digest}`;
     const repoLink = `${harborUrl}/harbor/projects/${projectName}/repositories/${repositoryName}`;
     // Sort vulnerabilities by severity
     const sortedVulns = [...vulnerabilities].sort((a, b) => {
