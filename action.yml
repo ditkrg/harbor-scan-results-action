@@ -12,10 +12,10 @@ inputs:
   harbor-url:
     description: 'Harbor registry URL'
     required: true
-  harbor-username:
+  username:
     description: 'Harbor username'
     required: true
-  harbor-password:
+  password:
     description: 'Harbor password'
     required: true
   project-name:

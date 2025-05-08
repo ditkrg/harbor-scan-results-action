@@ -58,8 +58,8 @@ jobs:
         uses: ./
         with:
           harbor-url: ${{ vars.HARBOR_URL }}
-          harbor-username: ${{ secrets.HARBOR_ROBOT }}
-          harbor-password: ${{ secrets.HARBOR_TOKEN }}
+          username: ${{ secrets.HARBOR_ROBOT }}
+          password: ${{ secrets.HARBOR_TOKEN }}
           project-name: ${{ vars.HARBOR_PROJECT }}
           repository-name: ${{ vars.HARBOR_REPOSITORY }}
           digest: ${{ vars.HARBOR_DIGEST }}

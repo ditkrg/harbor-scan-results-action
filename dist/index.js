@@ -27376,8 +27376,8 @@ async function run() {
     try {
         // Get inputs
         const harborUrl = coreExports.getInput('harbor-url', { required: true });
-        const harborUsername = coreExports.getInput('harbor-username', { required: true });
-        const harborPassword = coreExports.getInput('harbor-password', { required: true });
+        const harborUsername = coreExports.getInput('username', { required: true });
+        const harborPassword = coreExports.getInput('password', { required: true });
         const projectName = coreExports.getInput('project-name', { required: true });
         const repositoryName = coreExports.getInput('repository-name', { required: true });
         const digest = coreExports.getInput('digest', { required: true });

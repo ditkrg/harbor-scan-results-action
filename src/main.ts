@@ -16,8 +16,8 @@ export async function run(): Promise<void> {
   try {
     // Get inputs
     const harborUrl = core.getInput('harbor-url', { required: true })
-    const harborUsername = core.getInput('harbor-username', { required: true })
-    const harborPassword = core.getInput('harbor-password', { required: true })
+    const harborUsername = core.getInput('username', { required: true })
+    const harborPassword = core.getInput('password', { required: true })
     const projectName = core.getInput('project-name', { required: true })
     const repositoryName = core.getInput('repository-name', { required: true })
     const digest = core.getInput('digest', { required: true })
