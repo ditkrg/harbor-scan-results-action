@@ -57,7 +57,12 @@ jobs:
         id: test-action
         uses: ./
         with:
-          milliseconds: 2000
+          harbor-url: ${{ vars.HARBOR_URL }}
+          harbor-username: ${{ secrets.HARBOR_ROBOT }}
+          harbor-password: ${{ secrets.HARBOR_TOKEN }}
+          project-name: ${{ vars.HARBOR_PROJECT }}
+          repository-name: ${{ vars.HARBOR_REPOSITORY }}
+          digest: ${{ vars.HARBOR_DIGEST }}
 
       - name: Print Output
         id: output
