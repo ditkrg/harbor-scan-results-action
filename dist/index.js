@@ -27403,7 +27403,7 @@ async function run() {
             projectName = match[2];
             repositoryName = match[3];
         }
-        const registryUrl = `${proto || 'https'}://${registry}:${port || ''}`;
+        const registryUrl = `${proto || 'https'}://${registry}:${port || '443'}`;
         coreExports.info(`registryUrl: ${registryUrl}`);
         coreExports.info(`projectName: ${projectName}`);
         coreExports.info(`repositoryName: ${repositoryName}`);

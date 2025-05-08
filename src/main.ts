@@ -58,7 +58,7 @@ export async function run(): Promise<void> {
       repositoryName = match[3]
     }
 
-    const registryUrl = `${proto || 'https'}://${registry}:${port || ''}`
+    const registryUrl = `${proto || 'https'}://${registry}:${port || '443'}`
 
     core.info(`registryUrl: ${registryUrl}`)
     core.info(`projectName: ${projectName}`)
