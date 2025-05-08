@@ -27375,22 +27375,49 @@ async function wait(milliseconds) {
 async function run() {
     try {
         // Get inputs
-        const harborUrl = coreExports.getInput('harbor-url', { required: true });
-        const harborUsername = coreExports.getInput('username', { required: true });
-        const harborPassword = coreExports.getInput('password', { required: true });
-        const projectName = coreExports.getInput('project-name', { required: true });
-        const repositoryName = coreExports.getInput('repository-name', { required: true });
+        const proto = coreExports.getInput('proto', { required: false });
+        if (proto !== 'http' && proto !== 'https') {
+            throw new Error(`Invalid protocol ${proto}. Please use http or https.`);
+        }
+        const port = coreExports.getInput('port', { required: false });
         const digest = coreExports.getInput('digest', { required: true });
+        const username = coreExports.getInput('username', { required: true });
+        const password = coreExports.getInput('password', { required: true });
+        const image = coreExports.getInput('image', { required: false });
+        let registry = coreExports.getInput('registry', { required: false });
+        let projectName = coreExports.getInput('project-name', { required: false });
+        let repositoryName = coreExports.getInput('repository-name', { required: false });
+        // Either tag or registry, projectName, repositoryName and digest must be provided
+        if (!image && (!registry || !projectName || !repositoryName)) {
+            throw new Error('Either tag or registry, projectName, and repositoryName  must be provided');
+        }
+        // If tag is provided, extract projectName, repositoryName from it
+        if (image) {
+            // Make sure image is a valid docker image
+            const imageRegex = /^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)(:[a-zA-Z0-9_.-]+)?(@sha256:[a-zA-Z0-9_.-]+)?$/;
+            const match = image.match(imageRegex);
+            if (!match) {
+                throw new Error('Invalid image format. Please use the format registry/project/repository:tag or registry/project/repository@digest');
+            }
+            registry = match[1];
+            projectName = match[2];
+            repositoryName = match[3];
+        }
+        const registryUrl = `${proto || 'https'}://${registry}:${port || ''}`;
+        coreExports.info(`registryUrl: ${registryUrl}`);
+        coreExports.info(`projectName: ${projectName}`);
+        coreExports.info(`repositoryName: ${repositoryName}`);
         const maxAttempts = parseInt(coreExports.getInput('max-attempts') || '30', 10);
         const sleepInterval = parseInt(coreExports.getInput('sleep-interval') || '5', 10) * 1000; // Convert to milliseconds
         coreExports.info('Waiting for Harbor scan to complete...');
+        await wait(sleepInterval);
         // Poll for scan results
         let attempt = 1;
         let scanResult;
         while (attempt <= maxAttempts) {
             coreExports.info(`Attempt ${attempt} of ${maxAttempts}`);
             try {
-                scanResult = await getScanResults(harborUrl, harborUsername, harborPassword, projectName, repositoryName, digest);
+                scanResult = await getScanResults(registryUrl, username, password, projectName, repositoryName, digest);
                 if (checkScanStatus(scanResult)) {
                     break;
                 }
@@ -27407,7 +27434,7 @@ async function run() {
             throw new Error('Timeout waiting for scan results');
         }
         // Generate summary and report
-        const summary = generateScanSummary(scanResult, harborUrl, projectName, repositoryName, digest);
+        const summary = generateScanSummary(scanResult, registryUrl, projectName, repositoryName, digest);
         const markdownReport = generateMarkdownReport(summary);
         // Set outputs
         coreExports.setOutput('scan-results', JSON.stringify(summary));

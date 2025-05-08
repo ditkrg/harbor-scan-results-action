@@ -9,9 +9,19 @@ branding:
 
 # Define your inputs here.
 inputs:
-  harbor-url:
-    description: 'Harbor registry URL'
-    required: true
+  registry:
+    description: 'Harbor registry domain'
+    required: false
+  proto:
+    description: 'Protocol to use for the Harbor registry'
+    required: false
+    default: 'https'
+  port:
+    description: 'Port to use for the Harbor registry'
+    required: false
+  image:
+    description: 'Image to get scan results for'
+    required: false
   username:
     description: 'Harbor username'
     required: true
@@ -20,10 +30,10 @@ inputs:
     required: true
   project-name:
     description: 'Harbor project name'
-    required: true
+    required: false
   repository-name:
     description: 'Harbor repository name'
-    required: true
+    required: false
   digest:
     description: 'Image digest to scan'
     required: true

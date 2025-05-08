@@ -57,11 +57,20 @@ jobs:
         id: test-action
         uses: ./
         with:
-          harbor-url: ${{ vars.HARBOR_URL }}
+          registry: ${{ vars.HARBOR_REGISTRY }}
           username: ${{ secrets.HARBOR_ROBOT }}
           password: ${{ secrets.HARBOR_TOKEN }}
           project-name: ${{ vars.HARBOR_PROJECT }}
           repository-name: ${{ vars.HARBOR_REPOSITORY }}
+          digest: ${{ vars.HARBOR_DIGEST }}
+
+      - name: Test Local Action - Image
+        id: test-action-image
+        uses: ./
+        with:
+          image: ${{ vars.HARBOR_IMAGE }}
+          username: ${{ secrets.HARBOR_ROBOT }}
+          password: ${{ secrets.HARBOR_TOKEN }}
           digest: ${{ vars.HARBOR_DIGEST }}
 
       - name: Print Output
