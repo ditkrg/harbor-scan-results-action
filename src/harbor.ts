@@ -101,19 +101,6 @@ export function generateScanSummary(
 }
 
 export function generateMarkdownReport(summary: ScanSummary): string {
-  const severityCounts = [
-    summary.critical > 0
-      ? `${severityEmojis['Critical']} ${summary.critical} critical`
-      : null,
-    summary.high > 0 ? `${severityEmojis['High']} ${summary.high} high` : null,
-    summary.medium > 0
-      ? `${severityEmojis['Medium']} ${summary.medium} medium`
-      : null,
-    summary.low > 0 ? `${severityEmojis['Low']} ${summary.low} low` : null
-  ]
-    .filter(Boolean)
-    .join(' ')
-
   const vulnDetails = summary.vulnerabilities
     .slice(0, 10)
     .map((v: Vulnerability) => formatVulnerability(v))
@@ -121,16 +108,27 @@ export function generateMarkdownReport(summary: ScanSummary): string {
 
   const moreLine =
     summary.vulnerabilities.length > 10
-      ? `\n...and ${summary.vulnerabilities.length - 10} more. [See all in Harbor](${summary.repo_link})`
+      ? `\n...and ${summary.vulnerabilities.length - 10} more. [See all in Harbor](${summary.image_url})`
       : ''
+
+  // Generate step summary
+  const stepSummary = [
+    `🔍 **Scan Results Summary**`,
+    `📊 Total Vulnerabilities: ${summary.total}`,
+    `🔧 Fixable Issues: ${summary.fixable}`,
+    `⚠️ Severity Breakdown:`,
+    `   - ${severityEmojis['Critical']} Critical: ${summary.critical}`,
+    `   - ${severityEmojis['High']} High: ${summary.high}`,
+    `   - ${severityEmojis['Medium']} Medium: ${summary.medium}`,
+    `   - ${severityEmojis['Low']} Low: ${summary.low}`,
+    `\n🔗 [View Full Report in Harbor](${summary.image_url})`
+  ].join('\n')
 
   return `**Harbor Image Vulnerability Report**
 
-Results for image [${summary.image_url}](${summary.image_url})
-
-${severityCounts}
-
-**Total ${summary.total} vulnerabilities found - ${summary.fixable} fixable**
+  Results for [${summary.repo_link}](${summary.image_url})
+  
+${stepSummary}
 
 Scanned with \`${summary.scanner}\` from \`${summary.vendor}\`  
 Report generated at \`${summary.generated_at}\`
