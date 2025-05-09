@@ -27311,6 +27311,20 @@ function generateScanSummary(result, harborUrl, projectName, repositoryName, dig
     };
 }
 function generateMarkdownReport(summary) {
+    const severityCounts = [
+        summary.critical > 0
+            ? `**${severityEmojis['Critical']} Critical: ${summary.critical}**`
+            : null,
+        summary.high > 0
+            ? `**${severityEmojis['High']} High: ${summary.high}**`
+            : null,
+        summary.medium > 0
+            ? `**${severityEmojis['Medium']} Medium: ${summary.medium}**`
+            : null,
+        summary.low > 0 ? `**${severityEmojis['Low']} Low: ${summary.low}**` : null
+    ]
+        .filter(Boolean)
+        .join(' | ');
     const vulnDetails = summary.vulnerabilities
         .slice(0, 10)
         .map((v) => formatVulnerability(v))
@@ -27318,26 +27332,20 @@ function generateMarkdownReport(summary) {
     const moreLine = summary.vulnerabilities.length > 10
         ? `\n...and ${summary.vulnerabilities.length - 10} more. [See all in Harbor](${summary.image_url})`
         : '';
-    // Generate step summary
-    const stepSummary = [
-        `🔍 **Scan Results Summary**`,
-        `📊 Total Vulnerabilities: ${summary.total}`,
-        `🔧 Fixable Issues: ${summary.fixable}`,
-        `⚠️ Severity Breakdown:`,
-        `   - ${severityEmojis['Critical']} Critical: ${summary.critical}`,
-        `   - ${severityEmojis['High']} High: ${summary.high}`,
-        `   - ${severityEmojis['Medium']} Medium: ${summary.medium}`,
-        `   - ${severityEmojis['Low']} Low: ${summary.low}`,
-        `\n🔗 [View Full Report in Harbor](${summary.image_url})`
-    ].join('\n');
-    return `**Harbor Image Vulnerability Report**
+    return `## 🛡️ Harbor Image Vulnerability Report
 
-  Results for [${summary.repo_link}](${summary.image_url})
+Results for [${summary.repo_link}](${summary.image_url})
   
-${stepSummary}
+### 🔍 Scan Summary
 
-Scanned with \`${summary.scanner}\` from \`${summary.vendor}\`  
-Report generated at \`${summary.generated_at}\`
+**🧪 Total:** ${summary.total} | **🔧 Fixable:** ${summary.fixable}  
+${severityCounts}
+
+Scanned using \`${summary.scanner}\` by \`${summary.vendor}\` • \`${summary.generated_at}\`
+
+🔗 **[View Full Report in Harbor →](${summary.image_url})**
+
+---
 
 ### Vulnerabilities Found:
 ${vulnDetails}${moreLine}`;
